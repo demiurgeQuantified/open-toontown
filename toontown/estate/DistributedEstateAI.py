@@ -1,5 +1,6 @@
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
+from direct.showbase.PythonUtil import Functor
 
 from toontown.safezone import ETreasurePlannerAI
 from . import DistributedHouseAI
@@ -7,9 +8,10 @@ from . import DistributedHouseAI
 class DistributedEstateAI(DistributedObjectAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedEstateAI')
 
-    def __init__(self, air, zoneId):
+    def __init__(self, air, zoneId, avId):
         DistributedObjectAI.__init__(self, air)
         self.zoneId = zoneId
+        self.avId = avId
 
         self.estateType = 0 # what is this supposed to represent?
         self.dawnTime = 0
@@ -18,23 +20,32 @@ class DistributedEstateAI(DistributedObjectAI):
         self.rentalType = 0
 
         self.houses = {}
+        self.ownerToHouse = {None:0, None:1, None:2, None:3, None:4, None:5}
 
     def delete(self):
         self.ignoreAll()
         self.treasurePlanner.stop()
         self.treasurePlanner.deleteAllTreasuresNow()
         self.treasurePlanner = None
+        for houseList in self.houses.values():
+            for house in houseList:
+                house.delete()
         DistributedObjectAI.delete(self)
 
     def createObjects(self):
         simbase.estate = self
         self.treasurePlanner = ETreasurePlannerAI.ETreasurePlannerAI(self.zoneId)
         self.treasurePlanner.start()
+
+        self.air.getEstate(self.avId, Functor(self.handleGetEstate, self.avId))
         for houseIndex in range(0, 6):
             house = DistributedHouseAI.DistributedHouseAI(self.air, self.zoneId, houseIndex)
             house.generateWithRequired(self.zoneId)
             self.houses[houseIndex] = house
             house.generateObjects()
+
+    def handleGetEstate(self, avId):
+        pass
 
     def requestServerTime(self):
         self.sendUpdate('setServerTime', [0])

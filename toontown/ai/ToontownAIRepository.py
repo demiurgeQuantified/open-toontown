@@ -1,6 +1,8 @@
 from direct.directnotify import DirectNotifyGlobal
+from direct.distributed.PyDatagram import PyDatagram
 from panda3d.core import *
 from panda3d.toontown import *
+from .ToontownAIMsgTypes import *
 
 from otp.ai.AIZoneData import AIZoneDataStore
 from otp.ai.TimeManagerAI import TimeManagerAI
@@ -97,6 +99,8 @@ class ToontownAIRepository(ToontownInternalRepository):
         self.hoods = []
         self.buildingManagers = {}
         self.suitPlanners = {}
+        self.estateContext = 0
+        self.estateContextCallbackMap = {}
 
     def handleConnected(self):
         ToontownInternalRepository.handleConnected(self)
@@ -477,3 +481,25 @@ class ToontownAIRepository(ToontownInternalRepository):
     def setupFiles(self):
         if not os.path.exists(self.dataFolder):
             os.mkdir(self.dataFolder)
+
+    def getEstate(self, avId, callback):
+        datagram = PyDatagram()
+        datagram.addServerHeader(DBSERVER_ID, self.ourChannel, DBSERVER_GET_ESTATE)
+        datagram.addUint32(self.estateContext)
+        datagram.addUint32(avId)
+
+        self.estateContextCallbackMap[self.estateContext] = callback
+        self.estateContext += 1
+
+        self.send(datagram)
+
+    def handleGetEstateResp(self, di):
+        #estate database isn't written yet anyway
+        pass
+
+    def handleDatagram(self, di):
+        msgType = self.getMsgType()
+        if msgType == DBSERVER_GET_ESTATE_RESP:
+            self.handleGetEstateResp(di)
+        else:
+            ToontownInternalRepository.handleDatagram(self, di)

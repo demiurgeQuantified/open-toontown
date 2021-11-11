@@ -17,7 +17,7 @@ class DistributedHouseAI(DistributedObjectAI):
         self.gardenPos = 0
         self.ownerId = 0
         self.name = ''
-        self.colorIndex = 0
+        self.colorIndex = posIndex
         self.atticItems = CatalogItemList.CatalogItemList()
         self.interiorItems = CatalogItemList.CatalogItemList()
         self.atticWallpaper = CatalogItemList.CatalogItemList()
@@ -53,8 +53,16 @@ class DistributedHouseAI(DistributedObjectAI):
     def getGardenPos(self):
         return self.gardenPos
 
+    def b_setAvatarId(self, avId):
+        self.setAvatarId(avId)
+        self.d_setAvatarId(avId)
+
+    def d_setAvatarId(self, avId):
+        self.sendUpdate("setAvatarId", [avId])
+
     def setAvatarId(self, avId):
         self.ownerId = avId
+        self.air.doId2do[avId].b_setHouseId(self.doId)
 
     def getAvatarId(self):
         return self.ownerId
