@@ -1,8 +1,9 @@
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
 
+from toontown.building import DoorTypes
 from toontown.catalog import CatalogItemList, CatalogItem
-from . import HouseGlobals
+from . import HouseGlobals, DistributedHouseDoorAI
 
 class DistributedHouseAI(DistributedObjectAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedHouseAI')
@@ -32,7 +33,19 @@ class DistributedHouseAI(DistributedObjectAI):
         DistributedObjectAI.delete(self)
 
     def generateObjects(self):
-        #not dealing with this yet
+        self.intZoneId = self.air.allocateZone()
+
+        self.extDoor = DistributedHouseDoorAI.DistributedHouseDoorAI(self.air, self.doId, DoorTypes.EXT_STANDARD) # there's a DoorType called house, but it doesn't work?
+        self.extDoor.zoneId = self.zoneId
+
+        self.intDoor = DistributedHouseDoorAI.DistributedHouseDoorAI(self.air, self.doId, DoorTypes.INT_STANDARD)
+        self.intDoor.zoneId = self.intZoneId
+
+        self.extDoor.setOtherDoor(self.intDoor)
+        self.intDoor.setOtherDoor(self.extDoor)
+        self.extDoor.generateWithRequired(self.zoneId)
+        self.intDoor.generateWithRequired(self.intZoneId)
+        
         self.sendUpdate("setHouseReady", [])
 
     def b_setHousePos(self, pos):
