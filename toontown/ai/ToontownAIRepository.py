@@ -3,6 +3,7 @@ from direct.distributed.PyDatagram import PyDatagram
 from panda3d.core import *
 from panda3d.toontown import *
 from .ToontownAIMsgTypes import *
+from direct.showbase import PythonUtil
 
 from otp.ai.AIZoneData import AIZoneDataStore
 from otp.ai.TimeManagerAI import TimeManagerAI
@@ -482,24 +483,33 @@ class ToontownAIRepository(ToontownInternalRepository):
         if not os.path.exists(self.dataFolder):
             os.mkdir(self.dataFolder)
 
-    def getEstate(self, avId, callback):
-        datagram = PyDatagram()
-        datagram.addServerHeader(DBSERVER_ID, self.ourChannel, DBSERVER_GET_ESTATE)
-        datagram.addUint32(self.estateContext)
-        datagram.addUint32(avId)
+    def getEstate(self, accId, callback):
+        context = self.estateContext
 
         self.estateContextCallbackMap[self.estateContext] = callback
         self.estateContext += 1
 
-        self.send(datagram)
+        self.dbInterface.queryObject(self.dbId, accId,
+                                     PythonUtil.Functor(self.handleGetEstateResp, context))
 
-    def handleGetEstateResp(self, di):
-        #estate database isn't written yet anyway
-        pass
+    def handleGetEstateResp(self, context, dclass, fields):
+        account = fields
+        estateId = account['ESTATE_ID']
+        houseToonIds = account['ACCOUNT_AV_SET']
+        callback = self.estateContextCallbackMap.get(context)
+        callback(estateId, houseToonIds)
 
-    def handleDatagram(self, di):
-        msgType = self.getMsgType()
-        if msgType == DBSERVER_GET_ESTATE_RESP:
-            self.handleGetEstateResp(di)
-        else:
-            ToontownInternalRepository.handleDatagram(self, di)
+    def getToonHouse(self, avId, callback):
+        context = self.estateContext
+
+        self.estateContextCallbackMap[self.estateContext] = callback
+        self.estateContext += 1
+
+        self.dbInterface.queryObject(self.dbId, avId,
+                                     PythonUtil.Functor(self.handleGetToonHouseResp, context))
+
+    def handleGetToonHouseResp(self, context, dclass, fields):
+        toon = fields
+        houseId = toon['setHouseId'][0]
+        callback = self.estateContextCallbackMap.get(context)
+        callback(houseId)

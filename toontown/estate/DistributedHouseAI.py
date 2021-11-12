@@ -7,17 +7,17 @@ from . import HouseGlobals
 class DistributedHouseAI(DistributedObjectAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedHouseAI')
 
-    def __init__(self, air, zoneId, posIndex):
+    def __init__(self, air):
         DistributedObjectAI.__init__(self, air)
         self.air = air
-        self.zoneId = zoneId
+        self.zoneId = 0
 
-        self.housePosInd = posIndex
+        self.housePosInd = 0
         self.houseType = HouseGlobals.HOUSE_DEFAULT
         self.gardenPos = 0
         self.ownerId = 0
         self.name = ''
-        self.colorIndex = posIndex
+        self.colorIndex = 0
         self.atticItems = CatalogItemList.CatalogItemList()
         self.interiorItems = CatalogItemList.CatalogItemList()
         self.atticWallpaper = CatalogItemList.CatalogItemList()
@@ -34,6 +34,13 @@ class DistributedHouseAI(DistributedObjectAI):
     def generateObjects(self):
         #not dealing with this yet
         self.sendUpdate("setHouseReady", [])
+
+    def b_setHousePos(self, pos):
+        self.setHousePos(pos)
+        self.d_setHousePos(pos)
+
+    def d_setHousePos(self, pos):
+        self.sendUpdate("setHousePos", [pos])
 
     def setHousePos(self, pos):
         self.housePosInd = pos
@@ -62,7 +69,10 @@ class DistributedHouseAI(DistributedObjectAI):
 
     def setAvatarId(self, avId):
         self.ownerId = avId
-        self.air.doId2do[avId].b_setHouseId(self.doId)
+        if avId != 0:
+            try: self.air.doId2do[avId].b_setHouseId(self.getDoId())
+            except: self.notify.info('could not setHouseId of toon %d' % avId)
+            # this is called even when the toon is not in the dictionary (offline)
 
     def getAvatarId(self):
         return self.ownerId
@@ -72,6 +82,13 @@ class DistributedHouseAI(DistributedObjectAI):
 
     def getName(self):
         return self.name
+
+    def b_setColor(self, colorInd):
+        self.setColor(colorInd)
+        self.d_setColor(colorInd)
+
+    def d_setColor(self, colorInd):
+        self.sendUpdate("setColor", [colorInd])
 
     def setColor(self, color):
         self.colorIndex = color

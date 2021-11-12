@@ -1,19 +1,22 @@
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
-from direct.showbase.PythonUtil import Functor
+from direct.showbase import PythonUtil
+from toontown.estate import DistributedHouseAI
+from toontown.ai import DatabaseObject
+from toontown.toon import DistributedToonAI
 
 from toontown.safezone import ETreasurePlannerAI
-from . import DistributedHouseAI
 
 class DistributedEstateAI(DistributedObjectAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedEstateAI')
 
-    def __init__(self, air, zoneId, avId):
+    def __init__(self, air):
         DistributedObjectAI.__init__(self, air)
-        self.zoneId = zoneId
-        self.avId = avId
+        self.air = air
+        self.zoneId = 0
+        self.avId = 0
 
-        self.estateType = 0 # what is this supposed to represent?
+        self.estateType = 0 # i don't think this did anything
         self.dawnTime = 0
         self.lastEpochTimeStamp = 0
         self.rentalTimeStamp = 0
@@ -32,20 +35,69 @@ class DistributedEstateAI(DistributedObjectAI):
                 house.delete()
         DistributedObjectAI.delete(self)
 
-    def createObjects(self):
+    def createObjects(self, houseToonIds): # houseToonIds is a list of toonIds on the account, ordered by house position
         simbase.estate = self
         self.treasurePlanner = ETreasurePlannerAI.ETreasurePlannerAI(self.zoneId)
         self.treasurePlanner.start()
 
-        self.air.getEstate(self.avId, Functor(self.handleGetEstate, self.avId))
         for houseIndex in range(0, 6):
-            house = DistributedHouseAI.DistributedHouseAI(self.air, self.zoneId, houseIndex)
-            house.generateWithRequired(self.zoneId)
-            self.houses[houseIndex] = house
-            house.generateObjects()
+            houseId = 0
+            toonId = houseToonIds[houseIndex]
+            if not toonId == 0: # the house slot holds a toon
+                if toonId == self.avId: # must be our online toon
+                    toon = self.air.doId2do[toonId]
+                    houseId = toon.getHouseId()
+                    if houseId != 0: # they already have a house
+                        self.createHouse(houseId, houseIndex)
+                    else: # they don't have a house yet
+                        self.createHouseInDatabase(houseIndex, toonId)
+                else: # toon is offline, we have to go through the database
+                    readToonCallback = PythonUtil.Functor(self.returnToonHouse, houseIndex, toonId)
+                    self.air.getToonHouse(toonId, readToonCallback)
+            else: # this house doesn't belong to anyone, create a generic one
+                house = DistributedHouseAI.DistributedHouseAI(self.air)
+                house.housePosInd = houseIndex
+                house.colorIndex = houseIndex
+                house.generateWithRequired(self.zoneId)
+                house.generateObjects()
+                self.houses[houseIndex] = house
 
-    def handleGetEstate(self, avId):
-        pass
+    def createHouseInDatabase(self, houseIndex, toonId):
+        newHouseCallback = PythonUtil.Functor(self.returnNewHouseId, houseIndex, toonId)
+        self.air.dbInterface.createObject(self.air.dbId, self.air.dclassesByName['DistributedHouseAI'],
+                                          {'setAvatarId':(toonId,),'setColor':(houseIndex,),'setHousePos':(houseIndex,)},
+                                          newHouseCallback)
+
+    def returnNewHouseId(self, houseIndex, toonId, doId):
+        self.createHouse(doId, houseIndex, toonId)
+
+    def returnToonHouse(self, houseIndex, toonId, toonHouse):
+        if toonHouse != 0: # they already have a house
+            self.createHouse(toonHouse, houseIndex)
+        else: # they don't have a house yet
+            self.createHouseInDatabase(houseIndex, toonId)
+
+    def createHouse(self, houseId, houseIndex, toonId=0):
+        self.air.sendActivate(houseId, self.air.districtId, self.zoneId)
+        self.acceptOnce('generate-%d' % houseId, PythonUtil.Functor(self.gotHouse, houseIndex, toonId))
+
+    def gotHouse(self, houseIndex, toonId, house):
+        self.houses[houseIndex] = house
+
+        if not toonId == 0: # this value is only set in cases where the owner needs to have their setHouseId set
+            if toonId == self.avId: #they must be our online toon
+                house.b_setAvatarId(toonId)
+            else: # we have to do weird stuff to modify offline toons
+                toon = DistributedToonAI.DistributedToonAI(self.air)
+                toon.doId = toonId
+                db = DatabaseObject.DatabaseObject(self.air, toonId)
+                toon.b_setHouseId(house.getDoId())
+                db.storeObject(toon, ['setHouseId'])
+                toon.deleteDummy()
+        house.zoneId = self.zoneId
+        house.b_setHousePos(houseIndex)
+        house.b_setColor(houseIndex)
+        house.generateObjects()
 
     def requestServerTime(self):
         self.sendUpdate('setServerTime', [0])

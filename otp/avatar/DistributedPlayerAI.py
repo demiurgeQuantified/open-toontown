@@ -110,6 +110,9 @@ class DistributedPlayerAI(DistributedAvatarAI.DistributedAvatarAI, PlayerBase.Pl
     def setDISLid(self, id):
         self.DISLid = id
 
+    def getDISLid(self):
+        return self.DISLid
+
     def setAccessLevel(self, accessLevel):
         self.accessLevel = accessLevel
 
