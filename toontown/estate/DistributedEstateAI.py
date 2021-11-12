@@ -17,13 +17,14 @@ class DistributedEstateAI(DistributedObjectAI):
         self.avId = 0
 
         self.estateType = 0 # i don't think this did anything
-        self.dawnTime = 0
+        self.dawnTime = 0 # beta time cycle stuff, not a focus
         self.lastEpochTimeStamp = 0
         self.rentalTimeStamp = 0
         self.rentalType = 0
+        self.treasurePlanner = None
 
         self.houses = {}
-        self.ownerToHouse = {None:0, None:1, None:2, None:3, None:4, None:5}
+        self.ownerList = []
 
     def delete(self):
         self.ignoreAll()
@@ -37,12 +38,14 @@ class DistributedEstateAI(DistributedObjectAI):
 
     def createObjects(self, houseToonIds): # houseToonIds is a list of toonIds on the account, ordered by house position
         simbase.estate = self
+        self.ownerList = houseToonIds
+
         self.treasurePlanner = ETreasurePlannerAI.ETreasurePlannerAI(self.zoneId)
         self.treasurePlanner.start()
 
         for houseIndex in range(0, 6):
             houseId = 0
-            toonId = houseToonIds[houseIndex]
+            toonId = self.ownerList[houseIndex]
             if not toonId == 0: # the house slot holds a toon
                 if toonId == self.avId: # must be our online toon
                     toon = self.air.doId2do[toonId]
@@ -50,7 +53,7 @@ class DistributedEstateAI(DistributedObjectAI):
                     if houseId != 0: # they already have a house
                         self.createHouse(houseId, houseIndex)
                     else: # they don't have a house yet
-                        self.createHouseInDatabase(houseIndex, toonId)
+                        self.createHouseInDatabase(houseIndex, toon.getName(), toonId)
                 else: # toon is offline, we have to go through the database
                     readToonCallback = PythonUtil.Functor(self.returnToonHouse, houseIndex, toonId)
                     self.air.getToonHouse(toonId, readToonCallback)
@@ -62,20 +65,23 @@ class DistributedEstateAI(DistributedObjectAI):
                 house.generateObjects()
                 self.houses[houseIndex] = house
 
-    def createHouseInDatabase(self, houseIndex, toonId):
+    def createHouseInDatabase(self, houseIndex, toonName, toonId):
         newHouseCallback = PythonUtil.Functor(self.returnNewHouseId, houseIndex, toonId)
-        self.air.dbInterface.createObject(self.air.dbId, self.air.dclassesByName['DistributedHouseAI'],
-                                          {'setAvatarId':(toonId,),'setColor':(houseIndex,),'setHousePos':(houseIndex,)},
+        self.air.dbInterface.createObject(self.air.dbId,
+                                          self.air.dclassesByName['DistributedHouseAI'],
+                                          {'setAvatarId':[toonId],
+                                          'setColor':[houseIndex],
+                                          'setName':[toonName]},
                                           newHouseCallback)
 
     def returnNewHouseId(self, houseIndex, toonId, doId):
         self.createHouse(doId, houseIndex, toonId)
 
-    def returnToonHouse(self, houseIndex, toonId, toonHouse):
+    def returnToonHouse(self, houseIndex, toonId, toonHouse, toonName):
         if toonHouse != 0: # they already have a house
             self.createHouse(toonHouse, houseIndex)
         else: # they don't have a house yet
-            self.createHouseInDatabase(houseIndex, toonId)
+            self.createHouseInDatabase(houseIndex, toonName, toonId)
 
     def createHouse(self, houseId, houseIndex, toonId=0):
         self.air.sendActivate(houseId, self.air.districtId, self.zoneId)
@@ -94,9 +100,8 @@ class DistributedEstateAI(DistributedObjectAI):
                 toon.b_setHouseId(house.getDoId())
                 db.storeObject(toon, ['setHouseId'])
                 toon.deleteDummy()
-        house.zoneId = self.zoneId
         house.b_setHousePos(houseIndex)
-        house.b_setColor(houseIndex)
+        house.zoneId = self.zoneId
         house.generateObjects()
 
     def requestServerTime(self):

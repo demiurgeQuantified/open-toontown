@@ -77,6 +77,13 @@ class DistributedHouseAI(DistributedObjectAI):
     def getAvatarId(self):
         return self.ownerId
 
+    def b_setName(self, name):
+        self.setName(name)
+        self.d_setName(name)
+
+    def d_setName(self, name):
+        self.sendUpdate("setName", [name])
+
     def setName(self, name):
         self.name = name
 

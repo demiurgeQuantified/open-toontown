@@ -511,5 +511,6 @@ class ToontownAIRepository(ToontownInternalRepository):
     def handleGetToonHouseResp(self, context, dclass, fields):
         toon = fields
         houseId = toon['setHouseId'][0]
+        toonName = toon['setName'][0]
         callback = self.estateContextCallbackMap.get(context)
-        callback(houseId)
+        callback(houseId, toonName)
