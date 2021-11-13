@@ -10,9 +10,13 @@ class DistributedHouseInteriorAI(DistributedObjectAI):
         self.house = house
         self.houseId = self.house.ownerId
         self.houseIndex = self.house.housePosInd
-        self.wallpaper = self.house.interiorWallpaper
         self.windows = self.house.interiorWindows
+        self.wallpaper = self.house.interiorWallpaper
+
         DistributedObjectAI.__init__(self, self.air)
+
+    def generate(self):
+        DistributedObjectAI.generate(self)
 
     def setHouseId(self, houseId):
         self.houseId = houseId
@@ -26,11 +30,25 @@ class DistributedHouseInteriorAI(DistributedObjectAI):
     def getHouseIndex(self):
         return self.houseIndex
 
+    def b_setWallpaper(self, wallpaper):
+        self.setWallpaper(wallpaper)
+        self.d_setWallpaper(wallpaper)
+
+    def d_setWallpaper(self, wallpaper):
+        self.sendUpdate("setWallpaper", [wallpaper])
+
     def setWallpaper(self, wallpaper):
         self.wallpaper = wallpaper
 
     def getWallpaper(self):
         return self.wallpaper
+
+    def b_setWindows(self, windows):
+        self.setWindows(windows)
+        self.d_setWindows(windows)
+
+    def d_setWindows(self, windows):
+        self.sendUpdate("setWindows", [windows])
 
     def setWindows(self, windows):
         self.windows = windows

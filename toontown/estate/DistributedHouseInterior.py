@@ -13,6 +13,7 @@ from toontown.catalog import CatalogWallpaperItem
 from toontown.catalog import CatalogFlooringItem
 from toontown.catalog import CatalogMouldingItem
 from toontown.catalog import CatalogWainscotingItem
+from toontown.catalog import CatalogWindowItem
 WindowPlugNames = ('**/windowcut_a*', '**/windowcut_b*', '**/windowcut_c*', '**/windowcut_d*', '**/windowcut_e*', '**/windowcut_f*')
 RoomNames = ('**/group2', '**/group1')
 WallNames = ('ceiling*', 'wall_side_middle*', 'wall_front_middle*', 'windowcut_*')
@@ -34,6 +35,7 @@ class DistributedHouseInterior(DistributedObject.DistributedObject):
         self.houseIndex = 0
         self.interior = None
         self.exteriorWindowsHidden = 0
+        self.windows = ()
         return
 
     def generate(self):
@@ -99,7 +101,7 @@ class DistributedHouseInterior(DistributedObject.DistributedObject):
 
             return
         numSurfaceTypes = CatalogSurfaceItem.NUM_ST_TYPES
-        numRooms = min(len(self.wallpaper) / numSurfaceTypes, len(RoomNames))
+        numRooms = int(min(len(self.wallpaper) / numSurfaceTypes, len(RoomNames)))
         for room in range(numRooms):
             roomName = RoomNames[room]
             roomNode = self.interior.find(roomName)
@@ -176,12 +178,19 @@ class DistributedHouseInterior(DistributedObject.DistributedObject):
         self.houseIndex = index
 
     def setWallpaper(self, items):
-        self.wallpaper = CatalogItemList.CatalogItemList(items, store=CatalogItem.Customization)
+        self.wallpaper = []
+        for wallpaperList in items:
+            self.wallpaper.append(CatalogWallpaperItem.CatalogWallpaperItem(wallpaperList[0][0], wallpaperList[0][1], wallpaperList[0][2], wallpaperList[0][3]))
+            self.wallpaper.append(CatalogMouldingItem.CatalogMouldingItem(wallpaperList[1][0], wallpaperList[1][1]))
+            self.wallpaper.append(CatalogFlooringItem.CatalogFlooringItem(wallpaperList[2][0], wallpaperList[2][1]))
+            self.wallpaper.append(CatalogWainscotingItem.CatalogWainscotingItem(wallpaperList[3][0], wallpaperList[3][1]))
         if self.interior:
             self.__colorWalls()
 
     def setWindows(self, items):
-        self.windows = CatalogItemList.CatalogItemList(items, store=CatalogItem.Customization | CatalogItem.WindowPlacement)
+        self.windows = []
+        for windowList in items:
+            self.windows.append(CatalogWindowItem.CatalogWindowItem(windowList[0], windowList[1]))
         if self.interior:
             self.__setupWindows()
 

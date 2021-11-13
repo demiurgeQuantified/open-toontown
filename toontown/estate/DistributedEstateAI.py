@@ -90,7 +90,11 @@ class DistributedEstateAI(DistributedObjectAI):
     def gotHouse(self, houseIndex, toonId, house):
         self.houses[houseIndex] = house
 
-        if not toonId == 0: # this value is only set in cases where the owner needs to have their setHouseId set
+        house.b_setHousePos(houseIndex)
+        house.zoneId = self.zoneId
+        house.generateObjects()
+        
+        if not toonId == 0: # this value is only set when the house is new, and must be saved
             if toonId == self.avId: #they must be our online toon
                 house.b_setAvatarId(toonId)
             else: # we have to do weird stuff to modify offline toons
@@ -100,9 +104,7 @@ class DistributedEstateAI(DistributedObjectAI):
                 toon.b_setHouseId(house.getDoId())
                 db.storeObject(toon, ['setHouseId'])
                 toon.deleteDummy()
-        house.b_setHousePos(houseIndex)
-        house.zoneId = self.zoneId
-        house.generateObjects()
+            house.setupDefaults()
 
     def requestServerTime(self):
         self.sendUpdate('setServerTime', [0])

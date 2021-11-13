@@ -2,7 +2,6 @@ from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
 
 from toontown.building import DoorTypes
-from toontown.catalog import CatalogItemList, CatalogItem
 from . import HouseGlobals, DistributedHouseDoorAI, DistributedHouseInteriorAI
 
 class DistributedHouseAI(DistributedObjectAI):
@@ -19,14 +18,15 @@ class DistributedHouseAI(DistributedObjectAI):
         self.ownerId = 0
         self.name = ''
         self.colorIndex = 0
-        self.atticItems = CatalogItemList.CatalogItemList()
-        self.interiorItems = CatalogItemList.CatalogItemList()
-        self.atticWallpaper = CatalogItemList.CatalogItemList()
-        self.interiorWallpaper = CatalogItemList.CatalogItemList()
-        self.atticWindows = CatalogItemList.CatalogItemList()
-        self.interiorWindows = CatalogItemList.CatalogItemList()
-        self.deletedItems = CatalogItemList.CatalogItemList()
+        self.atticItems = []
+        self.interiorItems = []
+        self.atticWallpaper = []
+        self.interiorWallpaper = []
+        self.atticWindows = []
+        self.interiorWindows = []
+        self.deletedItems = []
         self.cannonEnabled = 0
+        self.interior = None
 
     def delete(self):
         self.ignoreAll()
@@ -50,6 +50,15 @@ class DistributedHouseAI(DistributedObjectAI):
         self.intDoor.generateWithRequired(self.intZoneId)
 
         self.sendUpdate("setHouseReady", [])
+
+    def setupDefaults(self):
+        self.interiorWindows = [[20, 2], [20, 4]]
+        self.interior.b_setWindows(self.interiorWindows)
+        self.b_setInteriorWindows(self.interiorWindows)
+
+        self.interiorWallpaper = [[[1000, 0, 0, 0],[1000, 0],[1000, 0],[1000, 0]],[[1000, 0, 0, 0],[1000, 0],[1000, 0],[1000, 0]]]
+        self.interior.b_setWallpaper(self.interiorWallpaper)
+        self.b_setInteriorWallpaper(self.interiorWallpaper)
 
     def b_setHousePos(self, pos):
         self.setHousePos(pos)
@@ -120,43 +129,61 @@ class DistributedHouseAI(DistributedObjectAI):
         return self.colorIndex
 
     def setAtticItems(self, items):
-        self.atticItems = CatalogItemList.CatalogItemList(items, CatalogItem.Customization)
+        self.atticItems = items
 
     def getAtticItems(self):
         return self.atticItems
 
     def setInteriorItems(self, items):
-        self.interiorItems = CatalogItemList.CatalogItemList(items, CatalogItem.Customization)
+        self.interiorItems = items
 
     def getInteriorItems(self):
         return self.interiorItems
 
+    def b_setInteriorWallpaper(self, wallpaper):
+        self.setInteriorWallpaper(wallpaper)
+        self.d_setInteriorWallpaper(wallpaper)
+
+    def d_setInteriorWallpaper(self, wallpaper):
+        self.sendUpdate("setInteriorWallpaper", [wallpaper])
+        if self.interior:
+            self.interior.b_setWallpaper(wallpaper)
+
     def setAtticWallpaper(self, wallpaper):
-        self.atticWallpaper = CatalogItemList.CatalogItemList(wallpaper, CatalogItem.Customization)
+        self.atticWallpaper = wallpaper
 
     def getAtticWallpaper(self):
         return self.atticWallpaper
 
     def setInteriorWallpaper(self, wallpaper):
-        self.interiorWallpaper = CatalogItemList.CatalogItemList(wallpaper, CatalogItem.Customization)
+        self.interiorWallpaper = wallpaper
 
     def getInteriorWallpaper(self):
         return self.interiorWallpaper
 
     def setAtticWindows(self, windows):
-        self.atticWindows = CatalogItemList.CatalogItemList(windows, CatalogItem.Customization)
+        self.atticWindows = windows
 
     def getAtticWindows(self):
         return self.atticWindows
 
+    def b_setInteriorWindows(self, windows):
+        self.setInteriorWindows(windows)
+        self.d_setInteriorWindows(windows)
+
+    def d_setInteriorWindows(self, windows):
+        self.sendUpdate("setInteriorWindows", [windows])
+        if self.interior:
+            self.interior.b_setWindows(windows)
+
     def setInteriorWindows(self, windows):
-        self.interiorWindows = CatalogItemList.CatalogItemList(windows, CatalogItem.Customization)
+        self.interiorWindows = windows
 
     def getInteriorWindows(self):
         return self.interiorWindows
 
     def setDeletedItems(self, items):
-        self.deletedItems = CatalogItemList.CatalogItemList(items, CatalogItem.Customization)
+        self.deletedItems = items
 
     def getDeletedItems(self):
         return self.deletedItems
