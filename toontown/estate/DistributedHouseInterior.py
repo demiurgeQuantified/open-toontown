@@ -35,7 +35,6 @@ class DistributedHouseInterior(DistributedObject.DistributedObject):
         self.houseIndex = 0
         self.interior = None
         self.exteriorWindowsHidden = 0
-        self.windows = ()
         return
 
     def generate(self):
@@ -178,19 +177,12 @@ class DistributedHouseInterior(DistributedObject.DistributedObject):
         self.houseIndex = index
 
     def setWallpaper(self, items):
-        self.wallpaper = []
-        for wallpaperList in items:
-            self.wallpaper.append(CatalogWallpaperItem.CatalogWallpaperItem(wallpaperList[0][0], wallpaperList[0][1], wallpaperList[0][2], wallpaperList[0][3]))
-            self.wallpaper.append(CatalogMouldingItem.CatalogMouldingItem(wallpaperList[1][0], wallpaperList[1][1]))
-            self.wallpaper.append(CatalogFlooringItem.CatalogFlooringItem(wallpaperList[2][0], wallpaperList[2][1]))
-            self.wallpaper.append(CatalogWainscotingItem.CatalogWainscotingItem(wallpaperList[3][0], wallpaperList[3][1]))
+        self.wallpaper = CatalogItemList.CatalogItemList(items, store=CatalogItem.Customization)
         if self.interior:
             self.__colorWalls()
 
     def setWindows(self, items):
-        self.windows = []
-        for windowList in items:
-            self.windows.append(CatalogWindowItem.CatalogWindowItem(windowList[0], windowList[1]))
+        self.windows = CatalogItemList.CatalogItemList(items, store=(CatalogItem.Customization | CatalogItem.WindowPlacement))
         if self.interior:
             self.__setupWindows()
 

@@ -3,7 +3,8 @@ from direct.distributed.DistributedObjectAI import DistributedObjectAI
 import random
 
 from toontown.building import DoorTypes
-from toontown.catalog import CatalogWallpaperItem, CatalogMouldingItem, CatalogFlooringItem, CatalogWainscotingItem
+from toontown.catalog import CatalogWallpaperItem, CatalogMouldingItem, CatalogFlooringItem, CatalogWainscotingItem, CatalogItem, CatalogWindowItem
+from toontown.catalog.CatalogItemList import CatalogItemList
 from . import HouseGlobals, DistributedHouseDoorAI, DistributedHouseInteriorAI
 
 class DistributedHouseAI(DistributedObjectAI):
@@ -54,23 +55,17 @@ class DistributedHouseAI(DistributedObjectAI):
         self.sendUpdate("setHouseReady", [])
 
     def setupDefaults(self):
-        self.interiorWindows = [[20, 2], [20, 4]]
+        self.interiorWindows = CatalogItemList([CatalogWindowItem.CatalogWindowItem(20, 2), CatalogWindowItem.CatalogWindowItem(20, 4)], (CatalogItem.Customization | CatalogItem.WindowPlacement))
         self.interior.b_setWindows(self.interiorWindows)
         self.b_setInteriorWindows(self.interiorWindows)
 
         wallpaper = random.choice(CatalogWallpaperItem.getWallpaperRange(1000, 1299))
-        wallpaper = [wallpaper.patternIndex, wallpaper.colorIndex, wallpaper.borderIndex, wallpaper.borderColorIndex]
-
         moulding = random.choice(CatalogMouldingItem.getAllMouldings(1000, 1010))
-        moulding = [moulding.patternIndex, moulding.colorIndex]
-
         flooring = random.choice(CatalogFlooringItem.getAllFloorings(1000, 1010))
-        flooring = [flooring.patternIndex, flooring.colorIndex]
-
         wainscoting = random.choice(CatalogWainscotingItem.getAllWainscotings(1000, 1010))
-        wainscoting = [wainscoting.patternIndex, wainscoting.colorIndex]
 
-        self.interiorWallpaper = [[wallpaper,moulding,flooring,wainscoting],[wallpaper,moulding,flooring,wainscoting]]
+        self.interiorWallpaper = CatalogItemList([wallpaper, moulding, flooring, wainscoting, wallpaper, moulding, flooring, wainscoting], CatalogItem.Customization)
+
         self.interior.b_setWallpaper(self.interiorWallpaper)
         self.b_setInteriorWallpaper(self.interiorWallpaper)
 
@@ -159,7 +154,7 @@ class DistributedHouseAI(DistributedObjectAI):
         self.d_setInteriorWallpaper(wallpaper)
 
     def d_setInteriorWallpaper(self, wallpaper):
-        self.sendUpdate("setInteriorWallpaper", [wallpaper])
+        self.sendUpdate("setInteriorWallpaper", [wallpaper.getBlob()])
         if self.interior:
             self.interior.b_setWallpaper(wallpaper)
 
@@ -186,7 +181,7 @@ class DistributedHouseAI(DistributedObjectAI):
         self.d_setInteriorWindows(windows)
 
     def d_setInteriorWindows(self, windows):
-        self.sendUpdate("setInteriorWindows", [windows])
+        self.sendUpdate("setInteriorWindows", [windows.getBlob()])
         if self.interior:
             self.interior.b_setWindows(windows)
 

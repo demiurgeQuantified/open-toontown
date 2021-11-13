@@ -1200,40 +1200,6 @@ dclass DistributedEstate : DistributedObject {
   gameTableOver() broadcast;
 };
 
-struct houseWindow {
-  uint8 type;
-  uint8 position;
-};
-
-struct houseWallpaper {
-  uint16 patternIndex;
-  uint8 colorIndex;
-  uint16 borderIndex;
-  uint8 borderColorIndex;
-};
-
-struct houseMoulding {
-  uint16 patternIndex;
-  uint8 colorIndex;
-};
-
-struct houseFlooring {
-  uint16 patternIndex;
-  uint8 colorIndex;
-};
-
-struct houseWainscoting {
-  uint16 patternIndex;
-  uint8 colorIndex;
-};
-
-struct houseWallpaperFull {
-  houseWallpaper wallpaper;
-  houseMoulding moulding;
-  houseFlooring flooring;
-  houseWainscoting wainscoting;
-}
-
 dclass DistributedHouse : DistributedObject {
   string DcObjectType db;
   setHousePos(uint8) required broadcast;
@@ -1244,10 +1210,10 @@ dclass DistributedHouse : DistributedObject {
   setColor(uint8) required broadcast db;
   setAtticItems(blob) required db;
   setInteriorItems(blob) required db;
-  setAtticWallpaper(houseWallpaperFull[]) required db;
-  setInteriorWallpaper(houseWallpaperFull[]) required db;
-  setAtticWindows(houseWindow[]) required db;
-  setInteriorWindows(houseWindow[]) required db;
+  setAtticWallpaper(blob) required db;
+  setInteriorWallpaper(blob) required db;
+  setAtticWindows(blob) required db;
+  setInteriorWindows(blob) required db;
   setDeletedItems(blob) required db;
   setCannonEnabled(uint8) required;
   setHouseReady() broadcast ram;
@@ -1256,8 +1222,8 @@ dclass DistributedHouse : DistributedObject {
 dclass DistributedHouseInterior : DistributedObject {
   setHouseId(uint32) required broadcast ram;
   setHouseIndex(uint8) required broadcast ram;
-  setWallpaper(houseWallpaperFull[]) required broadcast ram;
-  setWindows(houseWindow[]) required broadcast ram;
+  setWallpaper(blob) required broadcast ram;
+  setWindows(blob) required broadcast ram;
 };
 
 dclass DistributedGarden : DistributedObject {

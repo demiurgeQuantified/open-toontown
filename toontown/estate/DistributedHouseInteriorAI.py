@@ -35,7 +35,7 @@ class DistributedHouseInteriorAI(DistributedObjectAI):
         self.d_setWallpaper(wallpaper)
 
     def d_setWallpaper(self, wallpaper):
-        self.sendUpdate("setWallpaper", [wallpaper])
+        self.sendUpdate("setWallpaper", [wallpaper.getBlob()])
 
     def setWallpaper(self, wallpaper):
         self.wallpaper = wallpaper
@@ -48,7 +48,7 @@ class DistributedHouseInteriorAI(DistributedObjectAI):
         self.d_setWindows(windows)
 
     def d_setWindows(self, windows):
-        self.sendUpdate("setWindows", [windows])
+        self.sendUpdate("setWindows", [windows.getBlob()])
 
     def setWindows(self, windows):
         self.windows = windows
