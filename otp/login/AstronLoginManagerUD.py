@@ -182,26 +182,6 @@ class LoginOperation(GameOperation):
                         'ACCOUNT_ID': str(self.databaseId),
                         'ACCESS_LEVEL': self.accessLevel}
 
-        # hijacking this to create the estate, because it wasn't working on AI
-        # an account without an estate would be bad, but an estate without an account won't cause problems
-        # so we create the estate before storing the account
-        self.__handleCreateEstate()
-
-    def __handleCreateEstate(self):
-        self.estate = {}
-
-        self.loginManager.air.dbInterface.createObject(self.loginManager.air.dbId,
-                                                self.loginManager.air.dclassesByName['DistributedEstateAI'],
-                                                self.estate, self.__handleEstateCreated)
-
-    def __handleEstateCreated(self, estateId):
-        if not estateId:
-            # Could not create estate for some reason
-            self._handleCloseConnection('The account server could not create your estate!')
-            return
-
-        self.account['ESTATE_ID'] = estateId
-
         self.loginManager.air.dbInterface.createObject(self.loginManager.air.dbId,
                                                        self.loginManager.air.dclassesByName['AstronAccountUD'],
                                                        self.account, self.__handleAccountCreated)

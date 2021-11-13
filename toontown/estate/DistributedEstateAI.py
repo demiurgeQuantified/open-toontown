@@ -105,6 +105,7 @@ class DistributedEstateAI(DistributedObjectAI):
                 db.storeObject(toon, ['setHouseId'])
                 toon.deleteDummy()
             house.setupDefaults()
+            self.b_setToonId(houseIndex, toonId)
 
     def requestServerTime(self):
         self.sendUpdate('setServerTime', [0])
@@ -259,6 +260,40 @@ class DistributedEstateAI(DistributedObjectAI):
         else:
             return []
 
+    def setToonId(self, slot, avId):
+        if slot == 0:
+            self.setSlot0ToonId(avId)
+        elif slot == 1:
+            self.setSlot1ToonId(avId)
+        elif slot == 2:
+            self.setSlot2ToonId(avId)
+        elif slot == 3:
+            self.setSlot3ToonId(avId)
+        elif slot == 4:
+            self.setSlot4ToonId(avId)
+        elif slot == 5:
+            self.setSlot5ToonId(avId)
+
+    def b_setToonId(self, slot, avId):
+        if slot == 0:
+            self.setSlot0ToonId(avId)
+            self.d_setSlot0ToonId(avId)
+        elif slot == 1:
+            self.setSlot1ToonId(avId)
+            self.d_setSlot1ToonId(avId)
+        elif slot == 2:
+            self.setSlot2ToonId(avId)
+            self.d_setSlot2ToonId(avId)
+        elif slot == 3:
+            self.setSlot3ToonId(avId)
+            self.d_setSlot3ToonId(avId)
+        elif slot == 4:
+            self.setSlot4ToonId(avId)
+            self.d_setSlot4ToonId(avId)
+        elif slot == 5:
+            self.setSlot5ToonId(avId)
+            self.d_setSlot5ToonId(avId)
+
     def setSlot0ToonId(self, avId):
         self.slot0ToonId = avId
 
@@ -294,6 +329,42 @@ class DistributedEstateAI(DistributedObjectAI):
 
     def setSlot5Items(self, items):
         self.slot5Items = items
+
+    def d_setSlot0ToonId(self, avId):
+        self.sendUpdate("setSlot0ToonId", [avId])
+
+    def d_setSlot0Items(self, items):
+        self.sendUpdate("setSlot0Items", [items])
+
+    def d_setSlot1ToonId(self, avId):
+        self.sendUpdate("setSlot1ToonId", [avId])
+
+    def d_setSlot1Items(self, items):
+        self.sendUpdate("setSlot1Items", [items])
+
+    def d_setSlot2ToonId(self, avId):
+        self.sendUpdate("setSlot2ToonId", [avId])
+
+    def d_setSlot2Items(self, items):
+        self.sendUpdate("setSlot2Items", [items])
+
+    def d_setSlot3ToonId(self, avId):
+        self.sendUpdate("setSlot3ToonId", [avId])
+
+    def d_setSlot3Items(self, items):
+        self.sendUpdate("setSlot3Items", [items])
+
+    def d_setSlot4ToonId(self, avId):
+        self.sendUpdate("setSlot4ToonId", [avId])
+
+    def d_setSlot4Items(self, items):
+        self.sendUpdate("setSlot4Items", [items])
+
+    def d_setSlot5ToonId(self, avId):
+        self.sendUpdate("setSlot5ToonId", [avId])
+
+    def d_setSlot5Items(self, items):
+        self.sendUpdate("setSlot5Items", [items])
 
     def completeFlowerSale(self, sell):
         pass
