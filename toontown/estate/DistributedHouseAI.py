@@ -1,7 +1,9 @@
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
+import random
 
 from toontown.building import DoorTypes
+from toontown.catalog import CatalogWallpaperItem, CatalogMouldingItem, CatalogFlooringItem, CatalogWainscotingItem
 from . import HouseGlobals, DistributedHouseDoorAI, DistributedHouseInteriorAI
 
 class DistributedHouseAI(DistributedObjectAI):
@@ -56,7 +58,19 @@ class DistributedHouseAI(DistributedObjectAI):
         self.interior.b_setWindows(self.interiorWindows)
         self.b_setInteriorWindows(self.interiorWindows)
 
-        self.interiorWallpaper = [[[1000, 0, 0, 0],[1000, 0],[1000, 0],[1000, 0]],[[1000, 0, 0, 0],[1000, 0],[1000, 0],[1000, 0]]]
+        wallpaper = random.choice(CatalogWallpaperItem.getWallpaperRange(1000, 1299))
+        wallpaper = [wallpaper.patternIndex, wallpaper.colorIndex, wallpaper.borderIndex, wallpaper.borderColorIndex]
+
+        moulding = random.choice(CatalogMouldingItem.getAllMouldings(1000, 1010))
+        moulding = [moulding.patternIndex, moulding.colorIndex]
+
+        flooring = random.choice(CatalogFlooringItem.getAllFloorings(1000, 1010))
+        flooring = [flooring.patternIndex, flooring.colorIndex]
+
+        wainscoting = random.choice(CatalogWainscotingItem.getAllWainscotings(1000, 1010))
+        wainscoting = [wainscoting.patternIndex, wainscoting.colorIndex]
+
+        self.interiorWallpaper = [[wallpaper,moulding,flooring,wainscoting],[wallpaper,moulding,flooring,wainscoting]]
         self.interior.b_setWallpaper(self.interiorWallpaper)
         self.b_setInteriorWallpaper(self.interiorWallpaper)
 
