@@ -4,8 +4,9 @@ import random
 
 from toontown.building import DoorTypes
 from toontown.catalog import CatalogWallpaperItem, CatalogMouldingItem, CatalogFlooringItem, CatalogWainscotingItem, CatalogItem, CatalogWindowItem
+from toontown.catalog.CatalogFurnitureItem import CatalogFurnitureItem
 from toontown.catalog.CatalogItemList import CatalogItemList
-from . import HouseGlobals, DistributedHouseDoorAI, DistributedHouseInteriorAI
+from . import HouseGlobals, DistributedHouseDoorAI, DistributedHouseInteriorAI, DistributedFurnitureManagerAI
 
 class DistributedHouseAI(DistributedObjectAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedHouseAI')
@@ -21,13 +22,13 @@ class DistributedHouseAI(DistributedObjectAI):
         self.ownerId = 0
         self.name = ''
         self.colorIndex = 0
-        self.atticItems = []
-        self.interiorItems = []
-        self.atticWallpaper = []
-        self.interiorWallpaper = []
-        self.atticWindows = []
-        self.interiorWindows = []
-        self.deletedItems = []
+        self.atticItems = CatalogItemList()
+        self.interiorItems = CatalogItemList()
+        self.atticWallpaper = CatalogItemList()
+        self.interiorWallpaper = CatalogItemList()
+        self.atticWindows = CatalogItemList()
+        self.interiorWindows = CatalogItemList()
+        self.deletedItems = CatalogItemList()
         self.cannonEnabled = 0
         self.interior = None
 
@@ -40,6 +41,12 @@ class DistributedHouseAI(DistributedObjectAI):
 
         self.interior = DistributedHouseInteriorAI.DistributedHouseInteriorAI(self.air, self.intZoneId, self)
         self.interior.generateWithRequired(self.intZoneId)
+
+        self.furnitureMgr = DistributedFurnitureManagerAI.DistributedFurnitureManagerAI(self.air, self)
+        self.furnitureMgr.generateWithRequired(self.intZoneId)
+
+        for item in self.interiorItems:
+            self.furnitureMgr.createFurnitureItem(item)
 
         self.extDoor = DistributedHouseDoorAI.DistributedHouseDoorAI(self.air, self.doId, DoorTypes.EXT_STANDARD) # there's a DoorType called house, but it doesn't work?
         self.extDoor.zoneId = self.zoneId
@@ -66,6 +73,7 @@ class DistributedHouseAI(DistributedObjectAI):
 
         self.interiorWallpaper = CatalogItemList([wallpaper, moulding, flooring, wainscoting, wallpaper, moulding, flooring, wainscoting], CatalogItem.Customization)
 
+        self.b_setInteriorItems(CatalogFurnitureItem(200, posHpr = (-22.1, 6.5, 0.025, 90.0, 0.0, 0.0)))
         self.interior.b_setWallpaper(self.interiorWallpaper)
         self.b_setInteriorWallpaper(self.interiorWallpaper)
 
@@ -143,8 +151,15 @@ class DistributedHouseAI(DistributedObjectAI):
     def getAtticItems(self):
         return self.atticItems
 
+    def b_setInteriorItems(self, items):
+        self.setInteriorItems(items)
+        self.d_setInteriorItems(items)
+
+    def d_setInteriorItems(self, items):
+        self.sendUpdate("setInteriorItems", [items.getBlob(CatalogItem.Location | CatalogItem.Customization)])
+
     def setInteriorItems(self, items):
-        self.interiorItems = items
+        self.interiorItems = CatalogItemList(items, CatalogItem.Location | CatalogItem.Customization)
 
     def getInteriorItems(self):
         return self.interiorItems
