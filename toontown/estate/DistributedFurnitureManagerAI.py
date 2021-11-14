@@ -71,5 +71,12 @@ class DistributedFurnitureManagerAI(DistributedObjectAI):
     def createFurnitureItem(self, item):
         furnitureItem = DistributedFurnitureItemAI.DistributedFurnitureItemAI(self.air, self, item)
         furnitureItem.generateWithRequired(self.house.intZoneId)
+        item.furnitureItem = furnitureItem
         self.dfitems.append(furnitureItem)
         furnitureItem.d_setPosHpr(*item.posHpr)
+
+    def saveFurniturePos(self, furnitureItem):
+        furnitureItem in self.dfitems
+        furnitureItem.item.posHpr = furnitureItem.posHpr
+        self.house.interiorItems.markDirty() # we modified a property directly, so the CatalogItemList hasn't actually updated itself
+        self.house.d_setInteriorItems(self.house.interiorItems)
