@@ -1,10 +1,10 @@
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
 from direct.showbase import PythonUtil
+
 from toontown.estate import DistributedHouseAI
 from toontown.ai import DatabaseObject
 from toontown.toon import DistributedToonAI
-
 from toontown.safezone import ETreasurePlannerAI
 
 class DistributedEstateAI(DistributedObjectAI):

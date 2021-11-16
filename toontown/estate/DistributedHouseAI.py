@@ -145,11 +145,18 @@ class DistributedHouseAI(DistributedObjectAI):
     def getColor(self):
         return self.colorIndex
 
+    def b_setAtticItems(self, items):
+        self.setAtticItems(items)
+        self.d_setAtticItems(items)
+
+    def d_setAtticItems(self, items):
+        self.sendUpdate("setAtticItems", [items.getBlob(CatalogItem.Customization)])
+
     def setAtticItems(self, items):
-        self.atticItems = items
+        self.atticItems = CatalogItemList(items, CatalogItem.Customization)
 
     def getAtticItems(self):
-        return self.atticItems
+        return self.atticItems.getBlob(CatalogItem.Customization)
 
     def b_setInteriorItems(self, items):
         self.setInteriorItems(items)
@@ -207,7 +214,7 @@ class DistributedHouseAI(DistributedObjectAI):
         return self.interiorWindows
 
     def setDeletedItems(self, items):
-        self.deletedItems = items
+        self.deletedItems = CatalogItemList(items, CatalogItem.Location | CatalogItem.Customization)
 
     def getDeletedItems(self):
         return self.deletedItems

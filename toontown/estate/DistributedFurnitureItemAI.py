@@ -2,13 +2,13 @@ from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
 from direct.distributed.DistributedSmoothNodeAI import DistributedSmoothNodeAI
 from toontown.catalog import CatalogItem
-from . import HouseGlobals
+from . import HouseGlobals, DistributedHouseItemAI
 
-class DistributedFurnitureItemAI(DistributedSmoothNodeAI, DistributedObjectAI):
+class DistributedFurnitureItemAI(DistributedSmoothNodeAI, DistributedHouseItemAI.DistributedHouseItemAI):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedFurnitureItemAI')
 
     def __init__(self, air, furnitureMgr, item):
-        DistributedObjectAI.__init__(self, air)
+        DistributedHouseItemAI.DistributedHouseItemAI.__init__(self, air)
         DistributedSmoothNodeAI.__init__(self, air)
         self.air = air
         self.furnitureMgr = furnitureMgr

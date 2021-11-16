@@ -453,7 +453,7 @@ def decodeCatalogItem(di, versionNumber, store):
 
 
 def getItem(blob, store = 0):
-    dg = PyDatagram(blob)
+    dg = PyDatagram(bytes(blob))
     di = PyDatagramIterator(dg)
     try:
         versionNumber = di.getUint8()

@@ -1,6 +1,8 @@
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedObjectAI import DistributedObjectAI
-from toontown.catalog import CatalogItem
+from direct.showbase import PythonUtil
+
+from toontown.catalog import CatalogItem, CatalogItemList
 from toontown.estate import DistributedFurnitureItemAI
 
 class DistributedFurnitureManagerAI(DistributedObjectAI):
@@ -43,7 +45,7 @@ class DistributedFurnitureManagerAI(DistributedObjectAI):
         self.sendUpdate("setDeletedItems", [items.getBlob(CatalogItem.Customization)])
 
     def getDeletedItems(self):
-        return self.house.deletedItems#.getBlob(CatalogItem.Customization)
+        return self.house.getDeletedItems()
 
     def suggestDirector(self, avId):
         senderId = self.air.getAvatarIdFromSender()
@@ -71,12 +73,55 @@ class DistributedFurnitureManagerAI(DistributedObjectAI):
     def createFurnitureItem(self, item):
         furnitureItem = DistributedFurnitureItemAI.DistributedFurnitureItemAI(self.air, self, item)
         furnitureItem.generateWithRequired(self.house.intZoneId)
-        item.furnitureItem = furnitureItem
         self.dfitems.append(furnitureItem)
         furnitureItem.d_setPosHpr(*item.posHpr)
+        return furnitureItem
 
     def saveFurniturePos(self, furnitureItem):
         furnitureItem in self.dfitems
         furnitureItem.item.posHpr = furnitureItem.posHpr
         self.house.interiorItems.markDirty() # we modified a property directly, so the CatalogItemList hasn't actually updated itself
         self.house.d_setInteriorItems(self.house.interiorItems)
+
+    # client messages
+
+    def moveItemToAtticMessage(self, item, context):
+        senderId = self.air.getAvatarIdFromSender()
+        item = self.air.doId2do[item]
+        self.moveItemToAttic(item)
+        self.sendUpdateToAvatarId(senderId, 'moveItemToAtticResponse', [1, context])
+
+    def moveItemToAttic(self, furnitureItem):
+        item = furnitureItem.item
+
+        self.house.atticItems.append(item)
+        self.house.d_setAtticItems(self.house.atticItems)
+        self.d_setAtticItems(self.house.atticItems)
+
+        for i in range(len(self.house.interiorItems)):
+            if self.house.interiorItems[i] is item:
+                del self.house.interiorItems[i]
+                break
+        self.house.d_setInteriorItems(self.house.interiorItems)
+
+        self.dfitems.remove(furnitureItem)
+        furnitureItem.requestDelete()
+
+    def moveItemFromAtticMessage(self, index, x, y, z, h, p, r, context):
+        senderId = self.air.getAvatarIdFromSender()
+        objectId = self.moveItemFromAttic(index, (x, y, z, h, p, r), context)
+        self.sendUpdateToAvatarId(senderId, 'moveItemFromAtticResponse', [1, objectId, context]) # this is causing crashes because the client looks up the id before it receives the object
+        # if the client doesn't get the id, the furniture menu freezes until it is closed and opened again
+
+    def moveItemFromAttic(self, index, posHpr, context):
+        item = self.house.atticItems[index]
+        del self.house.atticItems[index]
+
+        item.posHpr = posHpr
+        self.house.interiorItems.append(item)
+        self.house.d_setInteriorItems(self.house.interiorItems)
+        self.house.d_setAtticItems(self.house.atticItems)
+        self.d_setAtticItems(self.house.atticItems)
+
+        furnitureItem = self.createFurnitureItem(item)
+        return furnitureItem.doId
